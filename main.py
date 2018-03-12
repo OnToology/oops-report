@@ -31,7 +31,7 @@ from subprocess import call
 import shutil
 
 
-def create_report(output_dir, ontology_dir):
+def get_oops_pitfalls(ontology_dir):
     f = open(ontology_dir, 'r')
     ont_file_content = f.read()
     url = 'http://oops-ws.oeg-upm.net/rest'
@@ -61,34 +61,25 @@ def create_report(output_dir, ontology_dir):
     print "oops reply:"
     print oops_reply
     pitfalls = output_parsed_pitfalls(oops_reply)
-    # issues, features = parse_oops_issues(oops_reply)
-    # print "issues:"
-    # print issues
-    # print "features:"
-    # print features
+    for p in pitfalls:
+        print "\n"
+        for k in p.keys():
+            print "%s: %s" % (str(k), str(p[k]))
+    return pitfalls
 
 
-    # issues_s = output_parsed_pitfalls(ont_file, oops_reply)
-    # dolog('got oops issues parsed')
-    # close_old_oops_issues_in_github(target_repo, ont_file)
-    # dolog('closed old oops issues in github')
-    # nicer_issues = nicer_oops_output(issues_s)
-    # dolog('get nicer issues')
-    # if nicer_issues != "":
-    #     dolog("nicer_issues: "+str(nicer_issues))
-    #     # evaluation report in this link\n Otherwise the URL won't work\n"
-    #     nicer_issues += "\n Please accept the merge request to see the evaluation report in this link. Otherwise the URL won't work.\n"
-    #     repo = target_repo.split('/')[1]
-    #     user = target_repo.split('/')[0]
-    #     nicer_issues += "https://rawgit.com/" + user + '/' + repo + \
-    #         '/master/OnToology/' + ont_file + '/evaluation/oopsEval.html'
-    #     if create_oops_issue_in_github(target_repo, ont_file, nicer_issues):
-    #         return ""
-    #     else:
-    #         return "error creating oops issue in github"
-    # else:
-    #     dolog("nicer_issues is empty")
-    #     return "No pitfalls found for this ontology"
+def create_report(pitfalls):
+    panels = []
+    for i, p in enumerate(pitfalls):
+        p["id"] = i
+        panel = get_panel(p)
+        panels.append(panel)
+    f = open("report.html")
+    html = f.read()
+    html % ("title", "URI", "version", "".join(panels))
+    f = open("new.html", "w")
+    f.write(html % ("title", "URI", "version", "".join(panels)))
+    f.close()
 
 
 def parse_oops_issues(oops_rdf):
@@ -140,7 +131,6 @@ def parse_oops_issues(oops_rdf):
 
 def output_parsed_pitfalls(oops_reply):
     issues, interesting_features = parse_oops_issues(oops_reply)
-    #s = ""
     pitfalls = []
     for i in issues:
         d = {}
@@ -152,12 +142,46 @@ def output_parsed_pitfalls(oops_reply):
         if d != {}:
             pitfalls.append(d)
 
-        #         s += key + ": " + val + "\n"
-        # s + "\n"
-        # s += 20 * "="
-        # s += "\n"
-    #return s
     return pitfalls
+
+
+def get_panel(pitfall):
+    """
+    :param pitfall: as a dict
+    :return: html of a single pitfall
+    """
+
+    labels = {
+        "Minor": "label-minor",
+        "Important": "label-warning",
+        "Critical": "label-danger"
+    }
+
+    label_key = str(pitfall["hasImportanceLevel"]).replace('"','')
+
+
+
+    return """
+    <div class="panel panel-default">
+    <div class="panel-heading">
+    <h4 class="panel-title">
+    <a data-toggle="collapse" href="#collapse%d">
+    %s. %s<span style="float: right;">%s cases detected. <span class="label %s">%s</span></span></a>
+    </h4>
+    </div>
+    <div id="collapse%d" class="panel-collapse collapse">
+    <div class="panel-body">
+    <p>%s</p>
+    </div>
+    </div>
+    </div>
+    """ % (pitfall["id"], pitfall["hasCode"], pitfall["hasName"], pitfall["hasNumberAffectedElements"],
+           labels[label_key], pitfall["hasImportanceLevel"], pitfall["id"], pitfall["hasDescription"])
+
+
+def workflow(output_dir, ontology_dir):
+    pitfalls = get_oops_pitfalls(ontology_dir=ontology_dir)
+    report = create_report(pitfalls)
 
 
 if __name__ == '__main__':
@@ -165,5 +189,5 @@ if __name__ == '__main__':
     parser.add_argument('--outputdir', help='the output directory')
     parser.add_argument('--ontologydir', help='the local directory to the ontology')
     args = parser.parse_args()
-    create_report(output_dir=args.outputdir, ontology_dir=args.ontologydir)
+    workflow(output_dir=args.outputdir, ontology_dir=args.ontologydir)
 
