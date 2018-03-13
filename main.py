@@ -15,10 +15,11 @@
 #
 # @author Ahmad Alobaid
 #
-
+import os
 import argparse
 import requests
 import rdfxml
+from OntologyGraph import OntologyGraph
 
 
 def get_oops_pitfalls(ontology_dir):
@@ -41,6 +42,9 @@ def get_oops_pitfalls(ontology_dir):
     }
     oops_reply = requests.post(url, data=xml_content, headers=headers)
     oops_reply = oops_reply.text
+    # print oops_reply
+    if 'http://www.oeg-upm.net/oops/unexpected_error' in oops_reply:
+        raise Exception("unexpected error in OOPS webservice")
     if oops_reply[:50] == '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">':
         if '<title>502 Proxy Error</title>' in oops_reply:
             raise Exception('Ontology is too big for OOPS')
@@ -54,7 +58,8 @@ def get_oops_pitfalls(ontology_dir):
     return pitfalls
 
 
-def create_report(pitfalls):
+def create_report(pitfalls, ontology_dir):
+    ont_graph = OntologyGraph(ontology_dir)
     panels = []
     for i, p in enumerate(pitfalls):
         p["id"] = i
@@ -62,9 +67,15 @@ def create_report(pitfalls):
         panels.append(panel)
     f = open("report.html")
     html = f.read()
-    html % ("title", "URI", "version", "".join(panels))
-    f = open("new.html", "w")
-    f.write(html % ("title", "URI", "version", "".join(panels)))
+    report = html % (ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(), ont_graph.get_uri(), ont_graph.get_version(), "".join(panels))
+    return report
+
+
+def save_report(report, ontology_dir, output_dir):
+    file_name = ontology_dir.split(os.sep)[-1]
+    file_name+= ".html"
+    f = open(os.path.join(output_dir, file_name), 'w')
+    f.write(report)
     f.close()
 
 
@@ -163,8 +174,8 @@ def get_panel(pitfall):
 
 def workflow(output_dir, ontology_dir):
     pitfalls = get_oops_pitfalls(ontology_dir=ontology_dir)
-    report = create_report(pitfalls)
-
+    report = create_report(pitfalls, ontology_dir)
+    save_report(report=report, output_dir=output_dir, ontology_dir=ontology_dir)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate a nice HTML from')
