@@ -74,9 +74,12 @@ def create_report(pitfalls, ontology_dir):
 
 
 def save_report(report, ontology_dir, output_dir):
-    file_name = ontology_dir.split(os.sep)[-1]
-    file_name+= ".html"
+    # maybe we can add some kind of options of the output file name
+    # file_name = ontology_dir.split(os.sep)[-1]
+    # file_name+= ".html"
+    file_name = "oops.html"
     print "output filename: %s" % file_name
+    print "output dir: %s" % output_dir
     f = open(os.path.join(output_dir, file_name), 'w')
     f.write(report)
     f.close()
