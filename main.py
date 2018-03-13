@@ -16,19 +16,9 @@
 # @author Ahmad Alobaid
 #
 
-
-
-import sys
-import os
 import argparse
 import requests
-
-
 import rdfxml
-
-
-from subprocess import call
-import shutil
 
 
 def get_oops_pitfalls(ontology_dir):
@@ -49,22 +39,18 @@ def get_oops_pitfalls(ontology_dir):
                'Content-Length': str(len(xml_content)),
                'Accept-Charset': 'utf-8'
     }
-    print "requests"
     oops_reply = requests.post(url, data=xml_content, headers=headers)
-    print "getting text"
     oops_reply = oops_reply.text
     if oops_reply[:50] == '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">':
         if '<title>502 Proxy Error</title>' in oops_reply:
             raise Exception('Ontology is too big for OOPS')
         else:
             raise Exception('Generic error from OOPS')
-    print "oops reply:"
-    print oops_reply
     pitfalls = output_parsed_pitfalls(oops_reply)
-    for p in pitfalls:
-        print "\n"
-        for k in p.keys():
-            print "%s: %s" % (str(k), str(p[k]))
+    # for p in pitfalls:
+    #     print "\n"
+    #     for k in p.keys():
+    #         print "%s: %s" % (str(k), str(p[k]))
     return pitfalls
 
 
@@ -156,11 +142,7 @@ def get_panel(pitfall):
         "Important": "label-warning",
         "Critical": "label-danger"
     }
-
     label_key = str(pitfall["hasImportanceLevel"]).replace('"','')
-
-
-
     return """
     <div class="panel panel-default">
     <div class="panel-heading">
@@ -189,5 +171,8 @@ if __name__ == '__main__':
     parser.add_argument('--outputdir', help='the output directory')
     parser.add_argument('--ontologydir', help='the local directory to the ontology')
     args = parser.parse_args()
-    workflow(output_dir=args.outputdir, ontology_dir=args.ontologydir)
-
+    try:
+        workflow(output_dir=args.outputdir, ontology_dir=args.ontologydir)
+        print "report is generated successfully"
+    except Exception as e:
+        print "exception in generating oops error: %s" % str(e)
