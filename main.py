@@ -16,10 +16,14 @@
 # @author Ahmad Alobaid
 #
 import os
+import xml.etree.ElementTree as ET
+
+# import rdfxml
 import argparse
 import requests
-import rdfxml
 from OntologyGraph import OntologyGraph
+
+rdfxml = dict()
 
 
 def get_oops_pitfalls(ontology_dir):
@@ -44,6 +48,8 @@ def get_oops_pitfalls(ontology_dir):
     }
     oops_reply = requests.post(url, data=xml_content, headers=headers)
     oops_reply = oops_reply.text
+    print("oops_reply: ")
+    print(oops_reply)
     # print oops_reply
     if 'http://www.oeg-upm.net/oops/unexpected_error' in oops_reply:
         raise Exception("unexpected error in OOPS webservice")
@@ -68,7 +74,7 @@ def create_report(pitfalls, ontology_dir):
         panel = get_panel(p)
         panels.append(panel)
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    print "base_dir: %s" % base_dir
+    print("base_dir: %s" % base_dir)
     f = open(os.path.join(base_dir, "report.html"))
     html = f.read()
     report = html % (ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(), ont_graph.get_uri(), ont_graph.get_version(), "".join(panels))
@@ -80,14 +86,64 @@ def save_report(report, ontology_dir, output_dir):
     # file_name = ontology_dir.split(os.sep)[-1]
     # file_name+= ".html"
     file_name = "oops.html"
-    print "output filename: %s" % file_name
-    print "output dir: %s" % output_dir
+    print("output filename: %s" % file_name)
+    print("output dir: %s" % output_dir)
     f = open(os.path.join(output_dir, file_name), 'w')
     f.write(report)
     f.close()
 
 
 def parse_oops_issues(oops_rdf):
+    """
+    To parse the
+    :param oops_rdf: rdfxml OOPS! reply
+    :return:
+    """
+    root = ET.fromstring(oops_rdf)
+    pitfalls = []
+    for child in root:
+        pitf = get_desc(child)
+        pitfalls.append(pitf)
+    return pitfalls
+
+
+def get_desc(desc_xml):
+    """
+    From XML child to dict
+    :param desc_xml:
+    :return:
+    """
+    has_code = ""
+    has_name = ""
+    has_desc = ""
+    has_importance = ""
+    has_num_aff = ""
+    affected_elements = []
+    for att in desc_xml:
+        if att.tag == '{http://oops.linkeddata.es/def#}hasAffectedElement':
+            affected_elements.append(att.text)
+        elif att.tag == '{http://oops.linkeddata.es/def#}hasImportanceLevel':
+            has_importance = att.text
+        elif att.tag == '{http://oops.linkeddata.es/def#}hasName':
+            has_name = att.name
+        elif att.tag == '{http://oops.linkeddata.es/def#}hasNumberAffectedElements':
+            has_num_aff = att.name
+        elif att.tag == '{http://oops.linkeddata.es/def#}hasDescription':
+            has_desc = att.name
+        elif att.tag == '{http://oops.linkeddata.es/def#}hasCode':
+            has_code = att.name
+    desc = {
+        'code': has_code,
+        'name': has_name,
+        'description': has_desc,
+        'importance': has_importance,
+        'num_of_affected_elements': has_num_aff,
+        'affected_elements': affected_elements
+    }
+    return desc
+
+
+def parse_oops_issues_old(oops_rdf):
     p = rdfxml.parseRDF(oops_rdf)
     raw_oops_list = p.result
     oops_issues = {}
@@ -146,7 +202,6 @@ def output_parsed_pitfalls(oops_reply):
                 d[key] = val
         if d != {}:
             pitfalls.append(d)
-
     return pitfalls
 
 
@@ -192,6 +247,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     try:
         workflow(output_dir=args.outputdir, ontology_dir=args.ontologydir)
-        print "report is generated successfully"
+        print("report is generated successfully")
     except Exception as e:
-        print "exception in generating oops error: %s" % str(e)
+        print("exception in generating oops error: %s" % str(e))
