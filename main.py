@@ -23,14 +23,10 @@ import argparse
 import requests
 from OntologyGraph import OntologyGraph
 
-rdfxml = dict()
-
 
 def get_oops_pitfalls(ontology_dir):
     f = open(ontology_dir, 'r')
     ont_file_content = f.read()
-    # old API
-    #url = 'http://oops-ws.oeg-upm.net/rest'
     url = "http://oops.linkeddata.es/rest"
     xml_content = """
     <?xml version="1.0" encoding="UTF-8"?>
@@ -45,11 +41,11 @@ def get_oops_pitfalls(ontology_dir):
                'Connection': 'Keep-Alive',
                'Content-Length': str(len(xml_content)),
                'Accept-Charset': 'utf-8'
-    }
+               }
     oops_reply = requests.post(url, data=xml_content, headers=headers)
     oops_reply = oops_reply.text
-    print("oops_reply: ")
-    print(oops_reply)
+    # print("oops_reply: ")
+    # print(oops_reply)
     # print oops_reply
     if 'http://www.oeg-upm.net/oops/unexpected_error' in oops_reply:
         raise Exception("unexpected error in OOPS webservice")
@@ -58,11 +54,7 @@ def get_oops_pitfalls(ontology_dir):
             raise Exception('Ontology is too big for OOPS')
         else:
             raise Exception('Generic error from OOPS')
-    pitfalls = output_parsed_pitfalls(oops_reply)
-    # for p in pitfalls:
-    #     print "\n"
-    #     for k in p.keys():
-    #         print "%s: %s" % (str(k), str(p[k]))
+    pitfalls = parse_oops_issues(oops_reply)
     return pitfalls
 
 
@@ -77,7 +69,9 @@ def create_report(pitfalls, ontology_dir):
     print("base_dir: %s" % base_dir)
     f = open(os.path.join(base_dir, "report.html"))
     html = f.read()
-    report = html % (ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(), ont_graph.get_uri(), ont_graph.get_version(), "".join(panels))
+    report = html % (
+        ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(),
+        ont_graph.get_uri(), ont_graph.get_version(), "".join(panels))
     return report
 
 
@@ -95,15 +89,16 @@ def save_report(report, ontology_dir, output_dir):
 
 def parse_oops_issues(oops_rdf):
     """
-    To parse the
+    To parse the oops_rdf response
     :param oops_rdf: rdfxml OOPS! reply
-    :return:
+    :return: list of pitalls, each as a dict
     """
     root = ET.fromstring(oops_rdf)
     pitfalls = []
     for child in root:
         pitf = get_desc(child)
-        pitfalls.append(pitf)
+        if pitf is not None:
+            pitfalls.append(pitf)
     return pitfalls
 
 
@@ -125,13 +120,13 @@ def get_desc(desc_xml):
         elif att.tag == '{http://oops.linkeddata.es/def#}hasImportanceLevel':
             has_importance = att.text
         elif att.tag == '{http://oops.linkeddata.es/def#}hasName':
-            has_name = att.name
+            has_name = att.text
         elif att.tag == '{http://oops.linkeddata.es/def#}hasNumberAffectedElements':
-            has_num_aff = att.name
+            has_num_aff = att.text
         elif att.tag == '{http://oops.linkeddata.es/def#}hasDescription':
-            has_desc = att.name
+            has_desc = att.text
         elif att.tag == '{http://oops.linkeddata.es/def#}hasCode':
-            has_code = att.name
+            has_code = att.text
     desc = {
         'code': has_code,
         'name': has_name,
@@ -140,69 +135,9 @@ def get_desc(desc_xml):
         'num_of_affected_elements': has_num_aff,
         'affected_elements': affected_elements
     }
+    if has_code == '':
+        return None
     return desc
-
-
-def parse_oops_issues_old(oops_rdf):
-    p = rdfxml.parseRDF(oops_rdf)
-    raw_oops_list = p.result
-    oops_issues = {}
-
-    # Filter #1
-    # Construct combine all data of a single elements into one json like format
-    for r in raw_oops_list:
-        if r['domain'] not in oops_issues:
-            oops_issues[r['domain']] = {}
-        oops_issues[r['domain']][r['relation']] = r['range']
-
-    # Filter #2
-    # get rid of elements without issue id
-    oops_issues_filter2 = {}
-    for i in oops_issues:
-        if '#' not in i:
-            oops_issues_filter2[i] = oops_issues[i]
-
-    # Filter #3
-    # Only include actual issues (some data are useless to us)
-    detailed_desc = []
-    oops_issues_filter3 = {}
-    for i in oops_issues_filter2:
-        if '<http://www.oeg-upm.net/oops#hasNumberAffectedElements>' in oops_issues_filter2[i]:
-            oops_issues_filter3[i] = oops_issues_filter2[i]
-
-    # Filter #4
-    # Only include data of interest about the issue
-    oops_issues_filter4 = {}
-    issue_interesting_data = [
-        '<http://www.oeg-upm.net/oops#hasName>',
-        '<http://www.oeg-upm.net/oops#hasCode>',
-        '<http://www.oeg-upm.net/oops#hasDescription>',
-        '<http://www.oeg-upm.net/oops#hasNumberAffectedElements>',
-        '<http://www.oeg-upm.net/oops#hasImportanceLevel>',
-        # '<http://www.oeg-upm.net/oops#hasAffectedElement>',
-        '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>',
-    ]
-    for i in oops_issues_filter3:
-        oops_issues_filter4[i] = {}
-        for intda in issue_interesting_data:
-            if intda in oops_issues_filter3[i]:
-                oops_issues_filter4[i][intda] = oops_issues_filter3[i][intda]
-    return oops_issues_filter4, issue_interesting_data
-
-
-def output_parsed_pitfalls(oops_reply):
-    issues, interesting_features = parse_oops_issues(oops_reply)
-    pitfalls = []
-    for i in issues:
-        d = {}
-        for intfea in interesting_features:
-            if intfea in issues[i]:
-                val = issues[i][intfea].split('^^')[0]
-                key = intfea.split("#")[-1].replace('>', '')
-                d[key] = val
-        if d != {}:
-            pitfalls.append(d)
-    return pitfalls
 
 
 def get_panel(pitfall):
@@ -210,13 +145,16 @@ def get_panel(pitfall):
     :param pitfall: as a dict
     :return: html of a single pitfall
     """
-
+    # print("In get panel")
     labels = {
         "Minor": "label-minor",
         "Important": "label-warning",
         "Critical": "label-danger"
     }
-    label_key = str(pitfall["hasImportanceLevel"]).replace('"','')
+    # print("pitfall: ")
+    # print(pitfall)
+    label_key = pitfall["importance"]
+    # label_key = str(pitfall["importance"]).replace('"','')
     return """
     <div class="panel panel-default">
     <div class="panel-heading">
@@ -231,14 +169,15 @@ def get_panel(pitfall):
     </div>
     </div>
     </div>
-    """ % (pitfall["id"], pitfall["hasCode"], pitfall["hasName"], pitfall["hasNumberAffectedElements"],
-           labels[label_key], pitfall["hasImportanceLevel"], pitfall["id"], pitfall["hasDescription"])
+    """ % (pitfall["id"], pitfall["code"], pitfall["name"], pitfall["num_of_affected_elements"],
+           labels[label_key], pitfall["importance"], pitfall["id"], pitfall["description"])
 
 
 def workflow(output_dir, ontology_dir):
     pitfalls = get_oops_pitfalls(ontology_dir=ontology_dir)
     report = create_report(pitfalls, ontology_dir)
     save_report(report=report, output_dir=output_dir, ontology_dir=ontology_dir)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate a nice HTML from')
