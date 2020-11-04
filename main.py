@@ -71,8 +71,12 @@ def create_report(pitfalls, ontology_dir):
         panels.append(panel)
     base_dir = os.path.dirname(os.path.realpath(__file__))
     print("base_dir: %s" % base_dir)
-    f = open(os.path.join(base_dir, "report.html"))
-    html = f.read()
+    try:
+        f = open(os.path.join(base_dir, "report.html"))
+        html = f.read()
+    except:
+        f = open(os.path.join(base_dir, "report.html"), encoding='utf-8')
+        html = f.read()
     report = html % (
         ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(),
         ont_graph.get_uri(), ont_graph.get_version(), "".join(panels))
