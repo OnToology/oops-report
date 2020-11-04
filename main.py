@@ -90,8 +90,12 @@ def save_report(report, ontology_dir, output_dir):
     file_name = "oops.html"
     print("output filename: %s" % file_name)
     print("output dir: %s" % output_dir)
-    f = open(os.path.join(output_dir, file_name), 'w')
-    f.write(report)
+    try:
+        f = open(os.path.join(output_dir, file_name), 'w')
+        f.write(report)
+    except:
+        f = open(os.path.join(output_dir, file_name), 'w', encoding='utf-8')
+        f.write(report)
     f.close()
 
 
