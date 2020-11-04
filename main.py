@@ -25,8 +25,12 @@ from OntologyGraph import OntologyGraph
 
 
 def get_oops_pitfalls(ontology_dir):
-    f = open(ontology_dir, 'r')
-    ont_file_content = f.read()
+    try:
+        f = open(ontology_dir, 'r')
+        ont_file_content = f.read()
+    except:
+        f = open(ontology_dir, 'r', encoding='utf-8')
+        ont_file_content = f.read()
     url = "http://oops.linkeddata.es/rest"
     xml_content = """
     <?xml version="1.0" encoding="UTF-8"?>
