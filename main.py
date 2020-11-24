@@ -15,6 +15,7 @@
 #
 # @author Ahmad Alobaid
 #
+import traceback
 import os
 import xml.etree.ElementTree as ET
 
@@ -46,7 +47,7 @@ def get_oops_pitfalls(ontology_dir):
                'Content-Length': str(len(xml_content)),
                'Accept-Charset': 'utf-8'
                }
-    oops_reply = requests.post(url, data=xml_content, headers=headers)
+    oops_reply = requests.post(url, data=xml_content.encode('utf-8'), headers=headers)
     oops_reply = oops_reply.text
     # print("oops_reply: ")
     # print(oops_reply)
@@ -201,3 +202,4 @@ if __name__ == '__main__':
         print("report is generated successfully")
     except Exception as e:
         print("exception in generating oops error: %s" % str(e))
+        #traceback.print_exc()
