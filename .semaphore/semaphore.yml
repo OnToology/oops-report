@@ -1,0 +1,36 @@
+version: v1.0
+name: First pipeline
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: Install Requirements
+    task:
+      prologue:
+        commands:
+          - checkout
+      jobs:
+        - name: Install Requirements
+          commands:
+            - sudo apt-get install python3-venv -y
+            - checkout
+            - python3 -m venv .venv
+            - .venv/bin/pip install -r requirements.txt
+    dependencies: []
+  - name: Run tests
+    dependencies:
+      - Install Requirements
+    task:
+      jobs:
+        - name: Run tests
+          commands:
+            - .venv/bin/python -m unittest tests.py
+  - name: Run coverage
+    dependencies:
+      - Run tests
+    task:
+      jobs:
+        - name: Coverage
+          commands:
+            - 'bash <(curl -s https://codecov.io/bash)'
