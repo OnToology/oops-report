@@ -19,6 +19,7 @@ blocks:
             - .venv/bin/pip install -r requirements.txt
             - .venv/bin/python -m unittest tests.py
             - .venv/bin/coverage run -m unittest tests.py
+            - .venv/bin/coverage report
             - 'bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN'
       secrets:
         - name: oops-report
