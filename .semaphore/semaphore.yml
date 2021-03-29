@@ -13,6 +13,6 @@ blocks:
       jobs:
         - name: Install requirements
           commands:
-            - apt-get install python3-venv
+            - sudo apt-get install python3-venv -y
             - checkout
             - .venv/bin/python -r requirements.txt
