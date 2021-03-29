@@ -24,14 +24,18 @@ import argparse
 import requests
 from OntologyGraph import OntologyGraph
 
+VERBOSE = False
+
 
 def get_oops_pitfalls(ontology_dir):
     try:
         f = open(ontology_dir, 'r')
         ont_file_content = f.read()
+        f.close()
     except:
         f = open(ontology_dir, 'r', encoding='utf-8')
         ont_file_content = f.read()
+        f.close()
     url = "http://oops.linkeddata.es/rest"
     xml_content = """
     <?xml version="1.0" encoding="UTF-8"?>
@@ -49,9 +53,9 @@ def get_oops_pitfalls(ontology_dir):
                }
     oops_reply = requests.post(url, data=xml_content.encode('utf-8'), headers=headers)
     oops_reply = oops_reply.text
-    # print("oops_reply: ")
-    # print(oops_reply)
-    # print oops_reply
+    if VERBOSE:
+        print("oops_reply: ")
+        print(oops_reply)
     if 'http://www.oeg-upm.net/oops/unexpected_error' in oops_reply:
         raise Exception("unexpected error in OOPS webservice")
     if oops_reply[:50] == '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">':
@@ -71,13 +75,18 @@ def create_report(pitfalls, ontology_dir):
         panel = get_panel(p)
         panels.append(panel)
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    print("base_dir: %s" % base_dir)
+    if VERBOSE:
+        print("base_dir: %s" % base_dir)
+        print("panels: ")
+        print(panels)
     try:
         f = open(os.path.join(base_dir, "report.html"))
         html = f.read()
+        f.close()
     except:
         f = open(os.path.join(base_dir, "report.html"), encoding='utf-8')
         html = f.read()
+        f.close()
     report = html % (
         ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(),
         ont_graph.get_uri(), ont_graph.get_version(), "".join(panels))
@@ -89,8 +98,9 @@ def save_report(report, ontology_dir, output_dir):
     # file_name = ontology_dir.split(os.sep)[-1]
     # file_name+= ".html"
     file_name = "oops.html"
-    print("output filename: %s" % file_name)
-    print("output dir: %s" % output_dir)
+    if VERBOSE:
+        print("output filename: %s" % file_name)
+        print("output dir: %s" % output_dir)
     try:
         f = open(os.path.join(output_dir, file_name), 'w')
         f.write(report)
@@ -112,6 +122,9 @@ def parse_oops_issues(oops_rdf):
         pitf = get_desc(child)
         if pitf is not None:
             pitfalls.append(pitf)
+    if VERBOSE:
+        print("number of pitfalls: %d" % len(pitfalls))
+        print(pitfalls)
     return pitfalls
 
 
@@ -159,6 +172,9 @@ def get_panel(pitfall):
     :return: html of a single pitfall
     """
     # print("In get panel")
+    if VERBOSE:
+        print("\n\n========================================\npitfall: ")
+        print(pitfall)
     labels = {
         "Minor": "label-minor",
         "Important": "label-warning",
@@ -166,7 +182,12 @@ def get_panel(pitfall):
     }
     # print("pitfall: ")
     # print(pitfall)
+    if "SUGGESTION" in pitfall["code"]:
+        pitfall["name"] = pitfall["code"].replace("SUGGESTION: ", "")
+        pitfall["importance"] = "Minor"
+
     label_key = pitfall["importance"]
+
     # label_key = str(pitfall["importance"]).replace('"','')
     return """
     <div class="panel panel-default">
@@ -196,10 +217,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate a nice HTML from')
     parser.add_argument('--outputdir', help='the output directory')
     parser.add_argument('--ontologydir', help='the local directory to the ontology')
+    parser.add_argument('--verbose', help='the local directory to the ontology')
     args = parser.parse_args()
     try:
+        if args.verbose:
+            if args.verbose.lower() in ('yes', 'true', 't', 'y', '1'):
+                VERBOSE = True
         workflow(output_dir=args.outputdir, ontology_dir=args.ontologydir)
         print("report is generated successfully")
     except Exception as e:
         print("exception in generating oops error: %s" % str(e))
-        #traceback.print_exc()
+        if VERBOSE:
+            traceback.print_exc()
