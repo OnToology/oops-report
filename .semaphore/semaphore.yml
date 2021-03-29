@@ -11,26 +11,14 @@ blocks:
         commands:
           - checkout
       jobs:
-        - name: Install Requirements
+        - name: Run tests  and coverage
           commands:
             - sudo apt-get install python3-venv -y
             - checkout
             - python3 -m venv .venv
             - .venv/bin/pip install -r requirements.txt
-    dependencies: []
-  - name: Run tests
-    dependencies:
-      - Install Requirements
-    task:
-      jobs:
-        - name: Run tests
-          commands:
             - .venv/bin/python -m unittest tests.py
-  - name: Run coverage
-    dependencies:
-      - Run tests
-    task:
-      jobs:
-        - name: Coverage
-          commands:
             - 'bash <(curl -s https://codecov.io/bash)'
+      secrets:
+        - name: oops-report
+    dependencies: []
