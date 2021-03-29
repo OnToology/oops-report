@@ -18,7 +18,7 @@ blocks:
             - python3 -m venv .venv
             - .venv/bin/pip install -r requirements.txt
             - .venv/bin/python -m unittest tests.py
-            - 'bash <(curl -s https://codecov.io/bash)'
+            - 'bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN'
       secrets:
         - name: oops-report
     dependencies: []
