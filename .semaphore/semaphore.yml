@@ -10,9 +10,12 @@ global_job_config:
       - python3 -m venv .venv
       - .venv/bin/python -r requirements.txt
 blocks:
-  - name: 'Block #1'
+  - name: Install requirements.txt
     task:
       jobs:
         - name: 'Job #1'
           commands:
             - checkout
+            - apt-get install python3-venv
+            - python3 -m venv .venv
+            - .venv/bin/python -r requirements.txt
