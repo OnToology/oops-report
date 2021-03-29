@@ -15,7 +15,7 @@ blocks:
       jobs:
         - name: Install requirements
           commands:
-            - checkout
+            - 'checkout '
             - apt-get install python3-venv
             - python3 -m venv .venv
             - .venv/bin/python -r requirements.txt
