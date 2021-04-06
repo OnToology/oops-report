@@ -18,10 +18,10 @@ It is obvious that not all the pitfalls are equally important; their impact in t
 
 ### Pitfalls
 
-- P22. Using different naming conventions in the ontology. <img src="minor.png" height="20px"> 1 cases detected.
+- P22. Using different naming conventions in the ontology. <img src="minor.png" height="15px"> 1 cases detected.
 *The ontology elements are not named following the same convention (for example CamelCase or use of delimiters as "-" or "_") . Some notions about naming conventions are provided in [2].*
 
-- P05. Defining wrong inverse relationships2 cases detected. <img src="critical.png" height="20px"> (2 cases detected).
+- P05. Defining wrong inverse relationships2 cases detected. <img src="critical.png" height="15px"> (2 cases detected).
 *Two relationships are defined as inverse relations when they are not necessarily inverse.*
 
 
