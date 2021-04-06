@@ -18,6 +18,8 @@ It is obvious that not all the pitfalls are equally important; their impact in t
 
 ### Pitfalls
 
+#### Option 1
+
 - P22. Using different naming conventions in the ontology. <img src="minor.png" height="15px"> 1 cases detected.
 
 *The ontology elements are not named following the same convention (for example CamelCase or use of delimiters as "-" or "_") . Some notions about naming conventions are provided in [2].*
@@ -26,7 +28,7 @@ It is obvious that not all the pitfalls are equally important; their impact in t
 
 *Two relationships are defined as inverse relations when they are not necessarily inverse.*
 
-
+#### Option 2
 
 ##### P22. Using different naming conventions in the ontology.
 <img src="minor.png" height="15px"> 1 cases detected.
@@ -38,6 +40,8 @@ The ontology elements are not named following the same convention (for example C
 *Two relationships are defined as inverse relations when they are not necessarily inverse.*
 
 
+#### Option 3
+
 - [ ] P22. Using different naming conventions in the ontology. <img src="minor.png" height="15px"> 1 cases detected.
 
 *The ontology elements are not named following the same convention (for example CamelCase or use of delimiters as "-" or "_") . Some notions about naming conventions are provided in [2].*
@@ -46,7 +50,7 @@ The ontology elements are not named following the same convention (for example C
 
 *Two relationships are defined as inverse relations when they are not necessarily inverse.*
 
-
+#### Option 4
 
 - **P22. Using different naming conventions in the ontology.** <img src="minor.png" height="15px"> 1 cases detected.
 
