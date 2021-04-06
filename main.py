@@ -223,8 +223,13 @@ if __name__ == '__main__':
         if args.verbose:
             if args.verbose.lower() in ('yes', 'true', 't', 'y', '1'):
                 VERBOSE = True
-        workflow(output_dir=args.outputdir, ontology_dir=args.ontologydir)
-        print("report is generated successfully")
+        if not args.outputdir:
+            print("ERROR: missing --outputdir")
+        elif not args.ontologydir:
+            print("ERROR: missing --ontologydir")
+        else:
+            workflow(output_dir=args.outputdir, ontology_dir=args.ontologydir)
+            print("report is generated successfully")
     except Exception as e:
         print("exception in generating oops error: %s" % str(e))
         if VERBOSE:
