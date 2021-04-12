@@ -301,6 +301,9 @@ if __name__ == '__main__':
         elif not args.ontologydir:
             print("ERROR: missing --ontologydir")
         else:
+            if VERBOSE:
+                print("output_dir: <%s>" % args.outputdir)
+                print("ontology_dir: <%s>" % args.ontologydir)
             workflow(output_dir=args.outputdir, ontology_dir=args.ontologydir)
             print("report is generated successfully")
     except Exception as e:
