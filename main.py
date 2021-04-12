@@ -93,11 +93,53 @@ def create_report(pitfalls, ontology_dir):
     return report
 
 
-def save_report(report, ontology_dir, output_dir):
+def create_md_report(pitfalls, ontology_dir):
+    ont_graph = OntologyGraph(ontology_dir)
+    panels = []
+    for i, p in enumerate(pitfalls):
+        p["id"] = i
+        panel = get_md_panel(p)
+        panels.append(panel)
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    if VERBOSE:
+        print("base_dir: %s" % base_dir)
+        print("panels: ")
+        print(panels)
+    try:
+        f = open(os.path.join(base_dir, "report.md"))
+        html = f.read()
+        f.close()
+    except:
+        f = open(os.path.join(base_dir, "report.md"), encoding='utf-8')
+        html = f.read()
+        f.close()
+    report = html % (
+        ont_graph.get_title(), "".join(panels))
+    return report
+
+
+def save_report(report, output_dir):
     # maybe we can add some kind of options of the output file name
     # file_name = ontology_dir.split(os.sep)[-1]
     # file_name+= ".html"
     file_name = "oops.html"
+    if VERBOSE:
+        print("output filename: %s" % file_name)
+        print("output dir: %s" % output_dir)
+    try:
+        f = open(os.path.join(output_dir, file_name), 'w')
+        f.write(report)
+    except:
+        f = open(os.path.join(output_dir, file_name), 'w', encoding='utf-8')
+        f.write(report)
+    f.close()
+
+
+def save_md_report(report, output_dir):
+    # maybe we can add some kind of options of the output file name
+    # file_name = ontology_dir.split(os.sep)[-1]
+    # file_name+= ".html"
+    file_name = "oops.md"
     if VERBOSE:
         print("output filename: %s" % file_name)
         print("output dir: %s" % output_dir)
@@ -207,10 +249,41 @@ def get_panel(pitfall):
            labels[label_key], pitfall["importance"], pitfall["id"], pitfall["description"])
 
 
+def get_md_panel(pitfall):
+    """
+    :param pitfall: as a dict
+    :return: html of a single pitfall
+    """
+    # print("In get panel")
+    if VERBOSE:
+        print("\n\n========================================\npitfall: ")
+        print(pitfall)
+    labels = {
+        "Minor": "https://raw.githubusercontent.com/OnToology/oops-report/master/sample/minor.png",
+        "Important": "https://raw.githubusercontent.com/OnToology/oops-report/master/sample/important.png",
+        "Critical": "https://raw.githubusercontent.com/OnToology/oops-report/master/sample/critical.png"
+    }
+    if "SUGGESTION" in pitfall["code"]:
+        pitfall["name"] = pitfall["code"].replace("SUGGESTION: ", "")
+        pitfall["importance"] = "Minor"
+
+    label_key = pitfall["importance"]
+
+    # label_key = str(pitfall["importance"]).replace('"','')
+    return """
+
+#### %s. %s <img src="%s" height="15px"> (%s cases detected).
+*%s*
+
+    """ % (pitfall["code"], pitfall["name"], labels[label_key], pitfall["num_of_affected_elements"], pitfall["description"].strip())
+
+
 def workflow(output_dir, ontology_dir):
     pitfalls = get_oops_pitfalls(ontology_dir=ontology_dir)
     report = create_report(pitfalls, ontology_dir)
-    save_report(report=report, output_dir=output_dir, ontology_dir=ontology_dir)
+    save_report(report=report, output_dir=output_dir)
+    md_report = create_md_report(pitfalls, ontology_dir)
+    save_md_report(md_report, output_dir)
 
 
 if __name__ == '__main__':

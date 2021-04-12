@@ -16,7 +16,7 @@ It is obvious that not all the pitfalls are equally important; their impact in t
 
 
 
-### Pitfalls
+## Pitfalls
 
 #### Option 1
 
