@@ -124,8 +124,13 @@ def save_report(report, output_dir):
     # file_name+= ".html"
     file_name = "oops.html"
     if VERBOSE:
-        print("output filename: %s" % file_name)
-        print("output dir: %s" % output_dir)
+        print("save_report> output filename: %s" % file_name)
+        print("save_report> output dir: %s" % output_dir)
+        if os.path.exists(output_dir):
+            print("save_report> exists: "+output_dir)
+        else:
+            print("save_report> does not exists: " + output_dir)
+
     try:
         f = open(os.path.join(output_dir, file_name), 'w')
         f.write(report)
