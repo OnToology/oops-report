@@ -26,6 +26,11 @@ from OntologyGraph import OntologyGraph
 VERBOSE = False
 
 
+def log(*args, **kwargs):
+    if VERBOSE:
+        print(*args, **kwargs)
+
+
 def get_oops_pitfalls(ontology_dir):
     try:
         f = open(ontology_dir, 'r')
@@ -52,9 +57,7 @@ def get_oops_pitfalls(ontology_dir):
                }
     oops_reply = requests.post(url, data=xml_content.encode('utf-8'), headers=headers)
     oops_reply = oops_reply.text
-    if VERBOSE:
-        print("oops_reply: ")
-        print(oops_reply)
+    log(f"oops_reply: {oops_reply}")
     if 'http://www.oeg-upm.net/oops/unexpected_error' in oops_reply:
         raise Exception("unexpected error in OOPS webservice")
     if oops_reply[:50] == '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">':
@@ -74,18 +77,11 @@ def create_report(pitfalls, ontology_dir):
         panel = get_panel(p)
         panels.append(panel)
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    if VERBOSE:
-        print("base_dir: %s" % base_dir)
-        print("panels: ")
-        print(panels)
-    try:
-        f = open(os.path.join(base_dir, "report.html"))
+
+    log("base_dir: %s" % base_dir)
+    log(f"panels: {panels}")
+    with open(os.path.join(base_dir, "report.html"), encoding='utf-8') as f:
         html = f.read()
-        f.close()
-    except:
-        f = open(os.path.join(base_dir, "report.html"), encoding='utf-8')
-        html = f.read()
-        f.close()
     report = html % (
         ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(),
         ont_graph.get_uri(), ont_graph.get_version(), "".join(panels))
@@ -100,54 +96,33 @@ def create_md_report(pitfalls, ontology_dir):
         panel = get_md_panel(p)
         panels.append(panel)
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    if VERBOSE:
-        print("base_dir: %s" % base_dir)
-        print("panels: ")
-        print(panels)
-    try:
-        f = open(os.path.join(base_dir, "report.md"))
+    log("base_dir: %s" % base_dir)
+    log(f"panels: {panels}")
+
+    report_md_path = os.path.join(base_dir, "report.md")
+    with open(report_md_path, encoding='utf-8') as f:
         html = f.read()
-        f.close()
-    except:
-        f = open(os.path.join(base_dir, "report.md"), encoding='utf-8')
-        html = f.read()
-        f.close()
-    report = html % (
-        ont_graph.get_title(), "".join(panels))
+    report = html % (ont_graph.get_title(), "".join(panels))
     return report
 
 
 def save_report(report, output_dir):
     file_name = "oops.html"
-    if VERBOSE:
-        print("save_report> output filename: %s" % file_name)
-        print("save_report> output dir: %s" % output_dir)
-        if os.path.exists(output_dir):
-            print("save_report> exists: "+output_dir)
-        else:
-            print("save_report> does not exists: " + output_dir)
 
-    try:
-        f = open(os.path.join(output_dir, file_name), 'w')
+    log("save_report> output filename: %s" % file_name)
+    log("save_report> output dir: %s" % output_dir)
+    log(f"save_report> if exists: {os.path.exists(output_dir)}: {output_dir}")
+    output_fpath = os.path.join(output_dir, file_name)
+    with open(output_fpath, "w", encoding='utf-8') as f:
         f.write(report)
-    except:
-        f = open(os.path.join(output_dir, file_name), 'w', encoding='utf-8')
-        f.write(report)
-    f.close()
 
 
 def save_md_report(report, output_dir):
     file_name = "oops.md"
-    if VERBOSE:
-        print("output filename: %s" % file_name)
-        print("output dir: %s" % output_dir)
-    try:
-        f = open(os.path.join(output_dir, file_name), 'w')
+    log("output filename: %s" % file_name)
+    log("output dir: %s" % output_dir)
+    with open(os.path.join(output_dir, file_name), 'w', encoding='utf-8') as f:
         f.write(report)
-    except:
-        f = open(os.path.join(output_dir, file_name), 'w', encoding='utf-8')
-        f.write(report)
-    f.close()
 
 
 def parse_oops_issues(oops_rdf):
@@ -162,9 +137,9 @@ def parse_oops_issues(oops_rdf):
         pitf = get_desc(child)
         if pitf is not None:
             pitfalls.append(pitf)
-    if VERBOSE:
-        print("number of pitfalls: %d" % len(pitfalls))
-        print(pitfalls)
+
+    log("number of pitfalls: %d" % len(pitfalls))
+    log(pitfalls)
     return pitfalls
 
 
@@ -248,10 +223,8 @@ def get_md_panel(pitfall):
     :param pitfall: as a dict
     :return: html of a single pitfall
     """
-    # print("In get panel")
-    if VERBOSE:
-        print("\n\n========================================\npitfall: ")
-        print(pitfall)
+    log("\n\n========================================\npitfall: ")
+    log(pitfall)
     labels = {
         "Minor": "https://raw.githubusercontent.com/OnToology/oops-report/master/sample/minor.png",
         "Important": "https://raw.githubusercontent.com/OnToology/oops-report/master/sample/important.png",
@@ -274,39 +247,28 @@ def get_md_panel(pitfall):
 
 def workflow(output_dir, ontology_dir):
     pitfalls = get_oops_pitfalls(ontology_dir=ontology_dir)
-    if VERBOSE:
-        print(f"pitfalls: {pitfalls}")
+    log(f"pitfalls: {pitfalls}")
     report = create_report(pitfalls, ontology_dir)
-    if VERBOSE:
-        print(f"report: {report}")
+    log(f"report: {report}")
     save_report(report=report, output_dir=output_dir)
-    if VERBOSE:
-        print(f"report saved")
+    log(f"report saved")
     md_report = create_md_report(pitfalls, ontology_dir)
-    if VERBOSE:
-        print(f"md report")
+    log(f"md report")
     save_md_report(md_report, output_dir)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate a nice HTML from')
-    parser.add_argument('--outputdir', help='the output directory')
-    parser.add_argument('--ontologydir', help='the local directory to the ontology')
+    parser.add_argument('--outputdir', required=True, help='the output directory')
+    parser.add_argument('--ontologydir', required=True, help='the local directory to the ontology')
     parser.add_argument('--verbose', action="store_true", help='the local directory to the ontology')
     args = parser.parse_args()
+    VERBOSE = args.verbose
     try:
-        if not args.outputdir:
-            print("ERROR: missing --outputdir")
-        elif not args.ontologydir:
-            print("ERROR: missing --ontologydir")
-        else:
-            VERBOSE = args.verbose
-            if VERBOSE:
-                print("output_dir: <%s>" % args.outputdir)
-                print("ontology_dir: <%s>" % args.ontologydir)
-            workflow(output_dir=args.outputdir, ontology_dir=args.ontologydir)
-            print("report is generated successfully")
+        log("output_dir: <%s>" % args.outputdir)
+        log("ontology_dir: <%s>" % args.ontologydir)
+        workflow(output_dir=args.outputdir, ontology_dir=args.ontologydir)
+        print("report is generated successfully")
     except Exception as e:
         print("exception in generating oops error: %s" % str(e))
-        if args.verbose:
-            traceback.print_exc()
+        log(traceback.format_exc())
