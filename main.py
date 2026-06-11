@@ -19,7 +19,6 @@ import traceback
 import os
 import xml.etree.ElementTree as ET
 
-# import rdfxml
 import argparse
 import requests
 from OntologyGraph import OntologyGraph
@@ -119,9 +118,6 @@ def create_md_report(pitfalls, ontology_dir):
 
 
 def save_report(report, output_dir):
-    # maybe we can add some kind of options of the output file name
-    # file_name = ontology_dir.split(os.sep)[-1]
-    # file_name+= ".html"
     file_name = "oops.html"
     if VERBOSE:
         print("save_report> output filename: %s" % file_name)
@@ -141,9 +137,6 @@ def save_report(report, output_dir):
 
 
 def save_md_report(report, output_dir):
-    # maybe we can add some kind of options of the output file name
-    # file_name = ontology_dir.split(os.sep)[-1]
-    # file_name+= ".html"
     file_name = "oops.md"
     if VERBOSE:
         print("output filename: %s" % file_name)
@@ -218,10 +211,8 @@ def get_panel(pitfall):
     :param pitfall: as a dict
     :return: html of a single pitfall
     """
-    # print("In get panel")
-    if VERBOSE:
-        print("\n\n========================================\npitfall: ")
-        print(pitfall)
+    print("\n\n========================================\npitfall: ")
+    print(pitfall)
     labels = {
         "Minor": "label-minor",
         "Important": "label-warning",
@@ -234,8 +225,6 @@ def get_panel(pitfall):
         pitfall["importance"] = "Minor"
 
     label_key = pitfall["importance"]
-
-    # label_key = str(pitfall["importance"]).replace('"','')
     return """
     <div class="panel panel-default">
     <div class="panel-heading">
@@ -285,9 +274,17 @@ def get_md_panel(pitfall):
 
 def workflow(output_dir, ontology_dir):
     pitfalls = get_oops_pitfalls(ontology_dir=ontology_dir)
+    if VERBOSE:
+        print(f"pitfalls: {pitfalls}")
     report = create_report(pitfalls, ontology_dir)
+    if VERBOSE:
+        print(f"report: {report}")
     save_report(report=report, output_dir=output_dir)
+    if VERBOSE:
+        print(f"report saved")
     md_report = create_md_report(pitfalls, ontology_dir)
+    if VERBOSE:
+        print(f"md report")
     save_md_report(md_report, output_dir)
 
 
@@ -295,17 +292,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate a nice HTML from')
     parser.add_argument('--outputdir', help='the output directory')
     parser.add_argument('--ontologydir', help='the local directory to the ontology')
-    parser.add_argument('--verbose', help='the local directory to the ontology')
     args = parser.parse_args()
     try:
-        if args.verbose:
-            if args.verbose.lower() in ('yes', 'true', 't', 'y', '1'):
-                VERBOSE = True
         if not args.outputdir:
             print("ERROR: missing --outputdir")
         elif not args.ontologydir:
             print("ERROR: missing --ontologydir")
         else:
+            VERBOSE = args.verbose
             if VERBOSE:
                 print("output_dir: <%s>" % args.outputdir)
                 print("ontology_dir: <%s>" % args.ontologydir)
@@ -313,5 +307,5 @@ if __name__ == '__main__':
             print("report is generated successfully")
     except Exception as e:
         print("exception in generating oops error: %s" % str(e))
-        if VERBOSE:
+        if args.verbose:
             traceback.print_exc()
