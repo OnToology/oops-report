@@ -82,6 +82,7 @@ def create_report(pitfalls, ontology_dir):
     log(f"panels: {panels}")
     with open(os.path.join(base_dir, "report.html"), encoding='utf-8') as f:
         html = f.read()
+
     report = html % (
         ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(), ont_graph.get_title(), ont_graph.get_uri(),
         ont_graph.get_uri(), ont_graph.get_version(), "".join(panels))
@@ -186,8 +187,8 @@ def get_panel(pitfall):
     :param pitfall: as a dict
     :return: html of a single pitfall
     """
-    print("\n\n========================================\npitfall: ")
-    print(pitfall)
+    log("\n\n========================================\npitfall: ")
+    log(pitfall)
     labels = {
         "Minor": "label-minor",
         "Important": "label-warning",
