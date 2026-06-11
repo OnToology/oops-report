@@ -35,7 +35,7 @@ def get_oops_pitfalls(ontology_dir):
         f = open(ontology_dir, 'r', encoding='utf-8')
         ont_file_content = f.read()
         f.close()
-    url = "http://oops.linkeddata.es/rest"
+    url = "https://oops.linkeddata.es/rest"
     xml_content = """
     <?xml version="1.0" encoding="UTF-8"?>
     <OOPSRequest>
