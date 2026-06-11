@@ -292,6 +292,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate a nice HTML from')
     parser.add_argument('--outputdir', help='the output directory')
     parser.add_argument('--ontologydir', help='the local directory to the ontology')
+    parser.add_argument('--verbose', action="store_true", help='the local directory to the ontology')
     args = parser.parse_args()
     try:
         if not args.outputdir:
